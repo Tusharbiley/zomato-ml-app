@@ -241,108 +241,486 @@ elif page == "📊  EDA & Insights":
 Most restaurants fall within the ₹200–₹1000 cost range and maintain
 ratings between 3.5–4.2, indicating a strong mid-market concentration.
     """)
-    tab1,tab2,tab3,tab4 = st.tabs(["Distributions","Cuisine & City","Rating Drivers","Correlations"])
-
-    def plot(fig): st.pyplot(fig); plt.close()
-
+    tab1,tab2,tab3,tab4 = st.tabs([
+        "Distributions",
+        "Cuisine & City",
+        "Rating Drivers",
+        "Correlations"
+    ])
+    
+    def plot(fig):
+        st.pyplot(fig)
+        plt.close()
+    
+    # ------------------------------------------------------------------
+    # TAB 1 — DISTRIBUTIONS
+    # ------------------------------------------------------------------
+    
     with tab1:
-        c1,c2 = st.columns(2)
+    
+        st.info("""
+    💡 Distribution Analysis Insight:
+    Most restaurants operate in the affordable-to-mid-price segment,
+    while ratings remain concentrated between 3.5 and 4.5 stars.
+        """)
+    
+        c1, c2 = st.columns(2)
+    
+        # --------------------------------------------------------------
+        # RATING DISTRIBUTION
+        # --------------------------------------------------------------
+    
         with c1:
+    
             st.markdown("**Rating Distribution**")
-            fig,ax = plt.subplots(figsize=(6,3.5))
+    
+            fig, ax = plt.subplots(figsize=(6,3.5))
+    
             v = df["rating"].dropna()
-            ax.hist(v, bins=25, color="#e23744", edgecolor="white", lw=.6)
-            ax.axvline(v.mean(), color="#1a1a2e", ls="--", lw=1.8, label=f"Mean {v.mean():.2f}")
-            ax.set_xlabel("Rating"); ax.legend()
-            plt.tight_layout(); plot(fig)
-            st.info("💡 Most ratings fall 3.5–4.5. Very few restaurants score below 2.5 or above 4.8.")
+    
+            ax.hist(
+                v,
+                bins=25,
+                color="#e23744",
+                edgecolor="white",
+                lw=.6
+            )
+    
+            ax.axvline(
+                v.mean(),
+                color="#1a1a2e",
+                ls="--",
+                lw=1.8,
+                label=f"Mean {v.mean():.2f}"
+            )
+    
+            ax.set_xlabel("Rating")
+    
+            ax.legend()
+    
+            plt.tight_layout()
+    
+            plot(fig)
+    
+            st.info("""
+    💡 Most ratings fall between 3.5–4.5.
+    Very few restaurants score below 2.5 or above 4.8.
+            """)
+    
+        # --------------------------------------------------------------
+        # COST DISTRIBUTION
+        # --------------------------------------------------------------
+    
         with c2:
+    
             st.markdown("**Cost for Two (₹)**")
-            fig,ax = plt.subplots(figsize=(6,3.5))
-            ax.hist(df["cost_for_two"].dropna(), bins=40, color="#FF7043", edgecolor="white", lw=.4)
-            ax.set_xlabel("₹"); plt.tight_layout(); plot(fig)
-            st.info("💡 Right-skewed: bulk of restaurants ₹200–₹1000. Premium tail above ₹2500.")
-        c3,c4 = st.columns(2)
+    
+            fig, ax = plt.subplots(figsize=(6,3.5))
+    
+            ax.hist(
+                df["cost_for_two"].dropna(),
+                bins=40,
+                color="#FF7043",
+                edgecolor="white",
+                lw=.4
+            )
+    
+            ax.set_xlabel("₹")
+    
+            plt.tight_layout()
+    
+            plot(fig)
+    
+            st.info("""
+    💡 Right-skewed distribution:
+    Most restaurants fall between ₹200–₹1000,
+    with premium outliers above ₹2500.
+            """)
+    
+        c3, c4 = st.columns(2)
+    
+        # --------------------------------------------------------------
+        # VOTES DISTRIBUTION
+        # --------------------------------------------------------------
+    
         with c3:
+    
             st.markdown("**Votes Distribution**")
-            fig,ax = plt.subplots(figsize=(6,3.5))
-            ax.hist(df["votes"].dropna(), bins=50, color="#42A5F5", edgecolor="white", lw=.4)
-            ax.set_xlabel("Votes"); plt.tight_layout(); plot(fig)
+    
+            fig, ax = plt.subplots(figsize=(6,3.5))
+    
+            ax.hist(
+                df["votes"].dropna(),
+                bins=50,
+                color="#42A5F5",
+                edgecolor="white",
+                lw=.4
+            )
+    
+            ax.set_xlabel("Votes")
+    
+            plt.tight_layout()
+    
+            plot(fig)
+    
+            st.info("""
+    💡 Most restaurants receive relatively low customer engagement,
+    while a small percentage achieve very high vote counts.
+            """)
+    
+        # --------------------------------------------------------------
+        # RESTAURANT TYPE
+        # --------------------------------------------------------------
+    
         with c4:
+    
             st.markdown("**Restaurant Type**")
-            fig,ax = plt.subplots(figsize=(6,3.5))
+    
+            fig, ax = plt.subplots(figsize=(6,3.5))
+    
             if "restaurant_type" in df.columns:
-                c = df["restaurant_type"].value_counts().head(8)
-                ax.barh(c.index[::-1], c.values[::-1], color="#66BB6A")
-            ax.set_xlabel("Count"); plt.tight_layout(); plot(fig)
-
+    
+                c = (
+                    df["restaurant_type"]
+                    .value_counts()
+                    .head(8)
+                )
+    
+                ax.barh(
+                    c.index[::-1],
+                    c.values[::-1],
+                    color="#66BB6A"
+                )
+    
+            ax.set_xlabel("Count")
+    
+            plt.tight_layout()
+    
+            plot(fig)
+    
+            st.info("""
+    💡 Quick Bites and Casual Dining dominate the market,
+    reflecting strong demand for affordable dining formats.
+            """)
+    
+    # ------------------------------------------------------------------
+    # TAB 2 — CUISINE & LOCATION
+    # ------------------------------------------------------------------
+    
     with tab2:
-        c1,c2 = st.columns(2)
+    
+        st.info("""
+    💡 Market Segmentation Insight:
+    Cuisine preference and geographic concentration strongly influence
+    restaurant competition and customer demand patterns.
+        """)
+    
+        c1, c2 = st.columns(2)
+    
+        # --------------------------------------------------------------
+        # TOP CUISINES
+        # --------------------------------------------------------------
+    
         with c1:
+    
             st.markdown("**Top 10 Cuisines**")
-            fig,ax = plt.subplots(figsize=(6,4))
+    
+            fig, ax = plt.subplots(figsize=(6,4))
+    
             if "cuisines" in df.columns:
-                t = df["cuisines"].value_counts().head(10)
-                bars = ax.barh(t.index[::-1], t.values[::-1],
-                               color=sns.color_palette("Set2",10))
-                ax.bar_label(bars, padding=3, fontsize=8)
-            plt.tight_layout(); plot(fig)
+    
+                t = (
+                    df["cuisines"]
+                    .value_counts()
+                    .head(10)
+                )
+    
+                bars = ax.barh(
+                    t.index[::-1],
+                    t.values[::-1],
+                    color=sns.color_palette("Set2",10)
+                )
+    
+                ax.bar_label(
+                    bars,
+                    padding=3,
+                    fontsize=8
+                )
+    
+            plt.tight_layout()
+    
+            plot(fig)
+    
+            st.info("""
+    💡 North Indian, Chinese, and Fast Food categories
+    represent the most competitive cuisine segments.
+            """)
+    
+        # --------------------------------------------------------------
+        # LOCATION ANALYSIS
+        # --------------------------------------------------------------
+    
         with c2:
+    
             st.markdown("**Restaurants by Location**")
-            fig,ax = plt.subplots(figsize=(6,4))
-            col = next((c for c in ["city","location"] if c in df.columns), None)
+    
+            fig, ax = plt.subplots(figsize=(6,4))
+    
+            col = next(
+                (c for c in ["city","location"] if c in df.columns),
+                None
+            )
+    
             if col:
-                c = df[col].value_counts().head(10)
-                bars = ax.bar(c.index, c.values,
-                              color=sns.color_palette("Set2",len(c)))
-                ax.bar_label(bars, padding=2, fontsize=8)
-                plt.xticks(rotation=30, ha="right")
-            plt.tight_layout(); plot(fig)
-
+    
+                c = (
+                    df[col]
+                    .value_counts()
+                    .head(10)
+                )
+    
+                bars = ax.bar(
+                    c.index,
+                    c.values,
+                    color=sns.color_palette("Set2",len(c))
+                )
+    
+                ax.bar_label(
+                    bars,
+                    padding=2,
+                    fontsize=8
+                )
+    
+                plt.xticks(
+                    rotation=30,
+                    ha="right"
+                )
+    
+            plt.tight_layout()
+    
+            plot(fig)
+    
+            st.info("""
+    💡 Restaurant density is highly concentrated in major urban
+    commercial areas with strong customer traffic.
+            """)
+    
+    # ------------------------------------------------------------------
+    # TAB 3 — RATING DRIVERS
+    # ------------------------------------------------------------------
+    
     with tab3:
-        c1,c2 = st.columns(2)
+    
+        st.info("""
+    💡 Rating Driver Insight:
+    Customer convenience features such as online ordering and
+    table booking show positive relationships with ratings.
+        """)
+    
+        c1, c2 = st.columns(2)
+    
+        # --------------------------------------------------------------
+        # ONLINE ORDER VS RATING
+        # --------------------------------------------------------------
+    
         with c1:
+    
             st.markdown("**Online Order vs Rating**")
-            fig,ax = plt.subplots(figsize=(6,4))
+    
+            fig, ax = plt.subplots(figsize=(6,4))
+    
             if "online_order" in df.columns:
-                for v,col in [("Yes","#66BB6A"),("No","#EF5350")]:
-                    s = df[df["online_order"]==v]["rating"].dropna()
-                    ax.hist(s, bins=15, alpha=.6, label=v, color=col)
-                ax.legend(title="Online Order"); ax.set_xlabel("Rating")
-            plt.tight_layout(); plot(fig)
-            st.info("💡 Online-order restaurants score slightly higher — digitally active = quality-focused.")
+    
+                for v, col in [
+    
+                    ("Yes", "#66BB6A"),
+                    ("No",  "#EF5350")
+    
+                ]:
+    
+                    s = (
+                        df[df["online_order"] == v]["rating"]
+                        .dropna()
+                    )
+    
+                    ax.hist(
+                        s,
+                        bins=15,
+                        alpha=.6,
+                        label=v,
+                        color=col
+                    )
+    
+                ax.legend(title="Online Order")
+    
+                ax.set_xlabel("Rating")
+    
+            plt.tight_layout()
+    
+            plot(fig)
+    
+            st.info("""
+    💡 Restaurants offering online ordering tend to achieve
+    slightly stronger customer ratings.
+            """)
+    
+        # --------------------------------------------------------------
+        # TABLE BOOKING VS RATING
+        # --------------------------------------------------------------
+    
         with c2:
+    
             st.markdown("**Table Booking vs Rating**")
-            fig,ax = plt.subplots(figsize=(6,4))
+    
+            fig, ax = plt.subplots(figsize=(6,4))
+    
             if "book_table" in df.columns:
-                for v,col in [("Yes","#42A5F5"),("No","#FFA726")]:
-                    s = df[df["book_table"]==v]["rating"].dropna()
-                    ax.hist(s, bins=15, alpha=.6, label=v, color=col)
-                ax.legend(title="Table Booking"); ax.set_xlabel("Rating")
-            plt.tight_layout(); plot(fig)
-            st.info("💡 Table-booking restaurants rate higher — strongly tied to Fine Dining segment.")
+    
+                for v, col in [
+    
+                    ("Yes", "#42A5F5"),
+                    ("No",  "#FFA726")
+    
+                ]:
+    
+                    s = (
+                        df[df["book_table"] == v]["rating"]
+                        .dropna()
+                    )
+    
+                    ax.hist(
+                        s,
+                        bins=15,
+                        alpha=.6,
+                        label=v,
+                        color=col
+                    )
+    
+                ax.legend(title="Table Booking")
+    
+                ax.set_xlabel("Rating")
+    
+            plt.tight_layout()
+    
+            plot(fig)
+    
+            st.info("""
+    💡 Table-booking restaurants generally belong to premium
+    or fine-dining categories with stronger ratings.
+            """)
+    
+        # --------------------------------------------------------------
+        # COST VS RATING
+        # --------------------------------------------------------------
+    
         st.markdown("**Rating vs Cost for Two**")
-        fig,ax = plt.subplots(figsize=(12,4))
-        s = df.dropna(subset=["rating","cost_for_two"]).sample(min(800,len(df)),random_state=42)
-        ax.scatter(s["cost_for_two"], s["rating"], alpha=.3, color="#7E57C2", s=14, edgecolors="none")
-        z = np.polyfit(s["cost_for_two"], s["rating"], 1)
-        xs = np.linspace(s["cost_for_two"].min(), s["cost_for_two"].max(), 200)
-        ax.plot(xs, np.poly1d(z)(xs), color="#e23744", lw=2, label="Trend")
-        ax.set_xlabel("Cost for Two (₹)"); ax.set_ylabel("Rating"); ax.legend()
-        plt.tight_layout(); plot(fig)
-
+    
+        fig, ax = plt.subplots(figsize=(12,4))
+    
+        s = (
+            df
+            .dropna(subset=["rating","cost_for_two"])
+            .sample(min(800, len(df)), random_state=42)
+        )
+    
+        ax.scatter(
+            s["cost_for_two"],
+            s["rating"],
+            alpha=.3,
+            color="#7E57C2",
+            s=14,
+            edgecolors="none"
+        )
+    
+        z = np.polyfit(
+            s["cost_for_two"],
+            s["rating"],
+            1
+        )
+    
+        xs = np.linspace(
+            s["cost_for_two"].min(),
+            s["cost_for_two"].max(),
+            200
+        )
+    
+        ax.plot(
+            xs,
+            np.poly1d(z)(xs),
+            color="#e23744",
+            lw=2,
+            label="Trend"
+        )
+    
+        ax.set_xlabel("Cost for Two (₹)")
+    
+        ax.set_ylabel("Rating")
+    
+        ax.legend()
+    
+        plt.tight_layout()
+    
+        plot(fig)
+    
+        st.info("""
+    💡 Higher-priced restaurants tend to achieve slightly better ratings,
+    though the relationship is moderate rather than strong.
+        """)
+    
+    # ------------------------------------------------------------------
+    # TAB 4 — CORRELATIONS
+    # ------------------------------------------------------------------
+    
     with tab4:
+    
+        st.info("""
+    💡 Correlation Analysis Insight:
+    Customer engagement and pricing variables show the strongest
+    relationships with restaurant ratings.
+        """)
+    
         st.markdown("**Correlation Heatmap**")
+    
         nd = df.copy()
-        for c in ["online_order","book_table"]:
+    
+        for c in ["online_order", "book_table"]:
+    
             if c in nd.columns:
-                nd[c] = (nd[c].str.lower()=="yes").astype(int)
-        nc = nd.select_dtypes(include=[np.number]).columns.tolist()
-        fig,ax = plt.subplots(figsize=(8,6))
-        sns.heatmap(nd[nc].corr(), annot=True, fmt=".2f",
-                    cmap="coolwarm", lw=.5, ax=ax, square=True)
-        plt.tight_layout(); plot(fig)
-        st.info("💡 Votes and cost_for_two are the strongest numeric predictors of rating.")
+    
+                nd[c] = (
+                    nd[c]
+                    .str.lower()
+                    .eq("yes")
+                    .astype(int)
+                )
+    
+        nc = (
+            nd
+            .select_dtypes(include=[np.number])
+            .columns
+            .tolist()
+        )
+    
+        fig, ax = plt.subplots(figsize=(8,6))
+    
+        sns.heatmap(
+            nd[nc].corr(),
+            annot=True,
+            fmt=".2f",
+            cmap="coolwarm",
+            lw=.5,
+            ax=ax,
+            square=True
+        )
+    
+        plt.tight_layout()
+    
+        plot(fig)
+    
+        st.info("""
+    💡 Votes and cost_for_two appear to be the strongest
+    numeric predictors of restaurant rating.
+        """)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
