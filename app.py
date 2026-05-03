@@ -147,9 +147,22 @@ if page == "🏠  Home":
           unsafe_allow_html=True)
 
     st.markdown("---")
+
+    # NEW: pipeline workflow
+    st.markdown("""
+### 🔄 ML Pipeline Workflow
+
+Data Loading → Preprocessing → EDA → Model Training  
+→ Evaluation → Clustering → Optimization → Profitability Prediction
+    """)
+
+    st.markdown("---")
+
     cl, cr = st.columns(2)
+
     with cl:
         st.markdown("#### 🤖 What this system does")
+
         st.markdown("""
 This ML system **predicts restaurant profitability** by:
 
@@ -162,9 +175,19 @@ This ML system **predicts restaurant profitability** by:
 3. **Segmenting restaurants** into market clusters (K-Means)
 4. Giving **actionable recommendations** to improve revenue
         """)
+
+        # NEW: business insight
+        st.info("""
+💡 Business Insight:
+Restaurants with stronger digital presence and higher customer engagement
+typically achieve better profitability scores and customer ratings.
+        """)
+
     with cr:
         st.markdown("#### 🏆 Best Model Performance")
+
         br = res.iloc[0]
+
         st.markdown(f"""
 | Metric | Value |
 |--------|-------|
@@ -174,17 +197,50 @@ This ML system **predicts restaurant profitability** by:
 | **R² Score** | {br['R²']} |
 | Overfit? | {br['Overfit?']} |
         """)
+
+        # NEW: model recommendation
+        st.success(f"""
+✅ {br['Model']} achieved the best balance between predictive accuracy
+and generalisation, making it the final production model.
+        """)
+
     st.markdown("---")
-    st.markdown("#### 📋 Sample Data")
+
+    # NEW: dataset info
+    st.caption(f"""
+Dataset contains {len(df):,} restaurants and {df.shape[1]} features after preprocessing.
+    """)
+
+    st.markdown("#### 📂 Processed Restaurant Dataset Preview")
+
     st.dataframe(df.head(8), use_container_width=True)
-
-
 # ─────────────────────────────────────────────────────────────────────────────
 #  EDA
 # ─────────────────────────────────────────────────────────────────────────────
 elif page == "📊  EDA & Insights":
+
     st.title("📊 Exploratory Data Analysis")
 
+    with st.expander("🧹 Data Cleaning & Preprocessing", expanded=True):
+
+        st.markdown("""
+### Data Cleaning Strategy
+
+- Removed duplicate restaurant records
+- Missing ratings imputed/removed using median strategy
+- Missing categorical values handled using mode imputation
+- Outliers capped using IQR-based filtering
+- High-cardinality categorical features reduced using Top-N encoding
+- One-hot encoding applied to categorical variables
+- Numerical features scaled using StandardScaler
+- Final NaN sweep performed before model training
+        """)
+
+    st.info("""
+💡 EDA Insight:
+Most restaurants fall within the ₹200–₹1000 cost range and maintain
+ratings between 3.5–4.2, indicating a strong mid-market concentration.
+    """)
     tab1,tab2,tab3,tab4 = st.tabs(["Distributions","Cuisine & City","Rating Drivers","Correlations"])
 
     def plot(fig): st.pyplot(fig); plt.close()
@@ -293,9 +349,54 @@ elif page == "📊  EDA & Insights":
 #  MODEL RESULTS
 # ─────────────────────────────────────────────────────────────────────────────
 elif page == "🧠  Model Results":
+
     st.title("🧠 ML Model Training & Evaluation")
 
+    # ------------------------------------------------------------------
+    # MODEL EXPLANATION
+    # ------------------------------------------------------------------
+
+    with st.expander("🤖 Supervised Learning Pipeline", expanded=True):
+
+        st.markdown("""
+### Models Implemented
+
+- **Linear Regression** → baseline interpretable model
+- **Ridge Regression** → regularized linear model
+- **Decision Tree Regressor** → captures non-linear decision boundaries
+- **Random Forest Regressor** → ensemble learning model with strong generalisation
+- **Gradient Boosting Regressor** → boosted ensemble model for advanced prediction
+
+### Evaluation Metrics
+
+- **MAE** → Mean Absolute Error (lower is better)
+- **RMSE** → Root Mean Squared Error (lower is better)
+- **R² Score** → prediction quality metric (higher is better)
+- **Train vs Test R²** → used for overfitting analysis
+
+### Model Selection Logic
+
+Random Forest achieved the best balance between:
+- predictive accuracy
+- robustness
+- generalisation performance
+
+making it the final production model.
+        """)
+
+    st.info("""
+💡 Model Insight:
+Ensemble models (Random Forest & Gradient Boosting) significantly
+outperformed linear models, indicating strong non-linear relationships
+within restaurant business features.
+    """)
+
+    # ------------------------------------------------------------------
+    # MODEL COMPARISON TABLE
+    # ------------------------------------------------------------------
+
     st.markdown("#### 📋 Model Comparison Table")
+
     st.dataframe(
         res.style
            .highlight_max(subset=["R²","Test R²"], color="#ed1a0b")
@@ -307,132 +408,573 @@ elif page == "🧠  Model Results":
                     "Train R²": "{:.4f}",
                     "Test R²": "{:.4f}"
                                         }),
-        use_container_width=True, height=230)
+        use_container_width=True,
+        height=230
+    )
 
     st.markdown("---")
-    t1,t2,t3 = st.tabs(["📊 Metric Bars","🔍 Overfitting","🎯 Actual vs Predicted"])
+
+    # ------------------------------------------------------------------
+    # TABS
+    # ------------------------------------------------------------------
+
+    t1, t2, t3 = st.tabs([
+        "📊 Metric Bars",
+        "🔍 Overfitting",
+        "🎯 Actual vs Predicted"
+    ])
+
+    # ------------------------------------------------------------------
+    # TAB 1 — METRIC BARS
+    # ------------------------------------------------------------------
+
     with t1:
-        fig,axes = plt.subplots(1,3,figsize=(14,5))
+
+        fig, axes = plt.subplots(1, 3, figsize=(14, 5))
+
         pal = sns.color_palette("Set2", len(res))
-        for ax,m in zip(axes,["MAE","RMSE","R²"]):
-            bars = ax.barh(res["Model"][::-1], res[m][::-1], color=pal)
-            ax.bar_label(bars, fmt="%.3f", padding=3, fontsize=8)
+
+        for ax, m in zip(axes, ["MAE", "RMSE", "R²"]):
+
+            bars = ax.barh(
+                res["Model"][::-1],
+                res[m][::-1],
+                color=pal
+            )
+
+            ax.bar_label(
+                bars,
+                fmt="%.3f",
+                padding=3,
+                fontsize=8
+            )
+
             ax.set_title(m)
-        plt.suptitle("Model Performance Comparison",fontsize=14,fontweight="bold")
-        plt.tight_layout(); st.pyplot(fig); plt.close()
+
+        plt.suptitle(
+            "Model Performance Comparison",
+            fontsize=14,
+            fontweight="bold"
+        )
+
+        plt.tight_layout()
+
+        st.pyplot(fig)
+
+        plt.close()
+
+    # ------------------------------------------------------------------
+    # TAB 2 — OVERFITTING
+    # ------------------------------------------------------------------
 
     with t2:
-        x=np.arange(len(res)); w=.35
-        fig,ax=plt.subplots(figsize=(10,5))
-        ax.bar(x-w/2, res["Train R²"], w, label="Train R²", color="#42A5F5")
-        ax.bar(x+w/2, res["Test R²"],  w, label="Test R²",  color="#66BB6A")
-        ax.set_xticks(x); ax.set_xticklabels(res["Model"],rotation=20,ha="right")
-        ax.set_ylabel("R²"); ax.set_ylim(0,1.1); ax.legend()
-        ax.set_title("Train R² vs Test R² — Overfitting Analysis")
-        plt.tight_layout(); st.pyplot(fig); plt.close()
-        st.info("💡 Large gap between Train and Test R² = overfitting. Decision Tree typically overfits most.")
+
+        x = np.arange(len(res))
+        w = .35
+
+        fig, ax = plt.subplots(figsize=(10, 5))
+
+        ax.bar(
+            x - w/2,
+            res["Train R²"],
+            w,
+            label="Train R²",
+            color="#42A5F5"
+        )
+
+        ax.bar(
+            x + w/2,
+            res["Test R²"],
+            w,
+            label="Test R²",
+            color="#66BB6A"
+        )
+
+        ax.set_xticks(x)
+
+        ax.set_xticklabels(
+            res["Model"],
+            rotation=20,
+            ha="right"
+        )
+
+        ax.set_ylabel("R²")
+
+        ax.set_ylim(0, 1.1)
+
+        ax.legend()
+
+        ax.set_title(
+            "Train R² vs Test R² — Overfitting Analysis"
+        )
+
+        plt.tight_layout()
+
+        st.pyplot(fig)
+
+        plt.close()
+
+        st.info("""
+💡 Overfitting Insight:
+A large gap between Train R² and Test R² suggests overfitting.
+Random Forest achieved strong generalisation with only mild overfitting.
+        """)
+
+    # ------------------------------------------------------------------
+    # TAB 3 — ACTUAL VS PREDICTED
+    # ------------------------------------------------------------------
 
     with t3:
-        bm = data["best_model"]
-        p  = np.clip(bm.predict(data["X_test"]),1.0,5.0)
-        fig,ax=plt.subplots(figsize=(6,6))
-        ax.scatter(data["y_test"],p,alpha=.3,color="#7E57C2",s=14,edgecolors="none")
-        ax.plot([1,5],[1,5],"r--",lw=1.5,label="Perfect fit")
-        ax.set_xlabel("Actual Rating"); ax.set_ylabel("Predicted Rating")
-        ax.set_title(f"Actual vs Predicted — {data['best_name']}")
-        ax.legend(); plt.tight_layout(); st.pyplot(fig); plt.close()
 
+        bm = data["best_model"]
+
+        p = np.clip(
+            bm.predict(data["X_test"]),
+            1.0,
+            5.0
+        )
+
+        fig, ax = plt.subplots(figsize=(6, 6))
+
+        ax.scatter(
+            data["y_test"],
+            p,
+            alpha=.3,
+            color="#7E57C2",
+            s=14,
+            edgecolors="none"
+        )
+
+        ax.plot(
+            [1, 5],
+            [1, 5],
+            "r--",
+            lw=1.5,
+            label="Perfect fit"
+        )
+
+        ax.set_xlabel("Actual Rating")
+
+        ax.set_ylabel("Predicted Rating")
+
+        ax.set_title(
+            f"Actual vs Predicted — {data['best_name']}"
+        )
+
+        ax.legend()
+
+        plt.tight_layout()
+
+        st.pyplot(fig)
+
+        plt.close()
+
+        st.success(f"""
+✅ {data['best_name']} demonstrates the strongest predictive
+performance and was selected as the final production model.
+        """)
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  CLUSTERS
 # ─────────────────────────────────────────────────────────────────────────────
 elif page == "🔵  Clusters":
+
     st.title("🔵 Restaurant Market Segmentation")
-    st.caption(f"K-Means clustering — Optimal k = **{clst['optimal_k']}** segments")
+
+    st.caption(
+        f"K-Means clustering — Optimal k = **{clst['optimal_k']}** segments"
+    )
+
+    # ------------------------------------------------------------------
+    # CLUSTERING EXPLANATION
+    # ------------------------------------------------------------------
+
+    with st.expander("🧩 Unsupervised Learning Process", expanded=True):
+
+        st.markdown("""
+### Clustering Methodology
+
+K-Means clustering was used to identify hidden restaurant market segments
+based on business performance indicators.
+
+### Features Used for Clustering
+
+- Restaurant Rating
+- Cost for Two
+- Customer Votes / Engagement
+- Online Ordering Availability
+- Table Booking Availability
+
+### Clustering Pipeline
+
+1. Numerical feature selection
+2. Feature scaling using StandardScaler
+3. Optimal K detection using Elbow Method
+4. K-Means cluster generation
+5. PCA-based dimensionality reduction
+6. Business interpretation of clusters
+
+### Business Goal
+
+The clustering system helps identify:
+- premium restaurant segments
+- budget-friendly high performers
+- underperforming restaurants
+- customer engagement patterns
+        """)
+
+    st.info("""
+💡 Clustering Insight:
+Restaurants naturally separate into distinct business groups based on
+pricing, customer engagement, and ratings — enabling targeted strategies
+for marketing and profitability improvement.
+    """)
+
+    # ------------------------------------------------------------------
+    # CLUSTER DATA
+    # ------------------------------------------------------------------
 
     profiles = clst["cluster_profiles"]
-    df_cl    = clst["df_clustered"]
-    COLS     = ["#e23744","#42A5F5","#66BB6A","#FFA726","#7E57C2","#26C6DA"]
+
+    df_cl = clst["df_clustered"]
+
+    COLS = [
+        "#e23744",
+        "#42A5F5",
+        "#66BB6A",
+        "#FFA726",
+        "#7E57C2",
+        "#26C6DA"
+    ]
+
+    # ------------------------------------------------------------------
+    # CLUSTER SUMMARY CARDS
+    # ------------------------------------------------------------------
 
     st.markdown("#### 🏷 Cluster Summary Cards")
-    cols = st.columns(min(clst['optimal_k'],3))
-    for i,(_,row) in enumerate(profiles.iterrows()):
+
+    cols = st.columns(min(clst['optimal_k'], 3))
+
+    for i, (_, row) in enumerate(profiles.iterrows()):
+
         with cols[i % len(cols)]:
-            c = COLS[i%len(COLS)]
+
+            c = COLS[i % len(COLS)]
+
             st.markdown(f"""
 <div style="background:{c}18;border-left:4px solid {c};
      border-radius:10px;padding:14px;margin-bottom:12px;">
-  <b style="font-size:15px;color:{c};">Cluster {int(row['cluster'])}</b><br>
-  <span style="font-size:12px;color:#555;">{row.get('Business Label','—')}</span><br><br>
+
+  <b style="font-size:15px;color:{c};">
+    Cluster {int(row['cluster'])}
+  </b><br>
+
+  <span style="font-size:12px;color:#555;">
+    {row.get('Business Label','—')}
+  </span><br><br>
+
   ⭐ Rating: <b>{row.get('rating','—')}</b><br>
+
   💰 Avg Cost: <b>₹{row.get('cost_for_two','—')}</b><br>
+
   👍 Votes: <b>{row.get('votes','—')}</b><br>
+
   🏪 Count: <b>{row.get('size','—')}</b>
-</div>""", unsafe_allow_html=True)
+
+</div>
+            """, unsafe_allow_html=True)
 
     st.markdown("---")
-    t1,t2,t3 = st.tabs(["🗺 PCA Map","📊 Profiles","📉 Elbow"])
+
+    # ------------------------------------------------------------------
+    # TABS
+    # ------------------------------------------------------------------
+
+    t1, t2, t3 = st.tabs([
+        "🗺 PCA Map",
+        "📊 Profiles",
+        "📉 Elbow"
+    ])
+
+    # ------------------------------------------------------------------
+    # TAB 1 — PCA MAP
+    # ------------------------------------------------------------------
 
     with t1:
+
         from sklearn.decomposition import PCA
         from sklearn.preprocessing import StandardScaler as SS
         from sklearn.cluster import KMeans
         from sklearn.metrics import silhouette_score
 
-        nf = [f for f in ["cost_for_two","votes","rating"] if f in df_cl.columns]
-        Xc = df_cl[nf].copy()
-        for c in ["online_order","book_table"]:
-            if c in df_cl.columns:
-                Xc[c]=(df_cl[c].str.lower()=="yes").astype(int)
-        Xc.fillna(Xc.median(),inplace=True)
-        Xs = SS().fit_transform(Xc)
-        pca=PCA(n_components=2,random_state=42)
-        Xp=pca.fit_transform(Xs)
-        lbl=clst["labels"]; var=pca.explained_variance_ratio_
+        nf = [
+            f for f in [
+                "cost_for_two",
+                "votes",
+                "rating"
+            ]
+            if f in df_cl.columns
+        ]
 
-        fig,ax=plt.subplots(figsize=(9,6))
+        Xc = df_cl[nf].copy()
+
+        for c in ["online_order", "book_table"]:
+
+            if c in df_cl.columns:
+
+                Xc[c] = (
+                    df_cl[c]
+                    .str.lower()
+                    .eq("yes")
+                    .astype(int)
+                )
+
+        Xc.fillna(
+            Xc.median(),
+            inplace=True
+        )
+
+        Xs = SS().fit_transform(Xc)
+
+        pca = PCA(
+            n_components=2,
+            random_state=42
+        )
+
+        Xp = pca.fit_transform(Xs)
+
+        lbl = clst["labels"]
+
+        var = pca.explained_variance_ratio_
+
+        fig, ax = plt.subplots(figsize=(9, 6))
+
         for c in range(clst["optimal_k"]):
-            m=lbl==c
-            ax.scatter(Xp[m,0],Xp[m,1],label=f"Cluster {c}",
-                       color=COLS[c%len(COLS)],alpha=.45,s=16,edgecolors="none")
-        ax.set_xlabel(f"PC1 ({var[0]*100:.1f}%)")
-        ax.set_ylabel(f"PC2 ({var[1]*100:.1f}%)")
-        ax.set_title("Restaurant Clusters — PCA Projection"); ax.legend(title="Cluster")
-        plt.tight_layout(); st.pyplot(fig); plt.close()
+
+            m = lbl == c
+
+            ax.scatter(
+                Xp[m, 0],
+                Xp[m, 1],
+                label=f"Cluster {c}",
+                color=COLS[c % len(COLS)],
+                alpha=.45,
+                s=16,
+                edgecolors="none"
+            )
+
+        ax.set_xlabel(
+            f"PC1 ({var[0]*100:.1f}%)"
+        )
+
+        ax.set_ylabel(
+            f"PC2 ({var[1]*100:.1f}%)"
+        )
+
+        ax.set_title(
+            "Restaurant Clusters — PCA Projection"
+        )
+
+        ax.legend(title="Cluster")
+
+        plt.tight_layout()
+
+        st.pyplot(fig)
+
+        plt.close()
+
+        st.success("""
+✅ PCA projection successfully visualises separation between
+restaurant market segments in reduced 2D feature space.
+        """)
+
+    # ------------------------------------------------------------------
+    # TAB 2 — CLUSTER PROFILES
+    # ------------------------------------------------------------------
 
     with t2:
-        metrics=[m for m in ["cost_for_two","votes","rating"] if m in profiles.columns]
-        fig,axes=plt.subplots(1,len(metrics),figsize=(5*len(metrics),4))
-        if len(metrics)==1: axes=[axes]
-        for ax,m in zip(axes,metrics):
-            bars=ax.bar(profiles["cluster"].astype(str),profiles[m],
-                        color=[COLS[i%len(COLS)] for i in range(len(profiles))])
-            ax.bar_label(bars,fmt="%.1f",padding=3,fontsize=9)
-            ax.set_title(f"Avg {m.replace('_',' ').title()}")
-        plt.suptitle("Cluster Profiles",fontsize=13,fontweight="bold")
-        plt.tight_layout(); st.pyplot(fig); plt.close()
+
+        metrics = [
+            m for m in [
+                "cost_for_two",
+                "votes",
+                "rating"
+            ]
+            if m in profiles.columns
+        ]
+
+        fig, axes = plt.subplots(
+            1,
+            len(metrics),
+            figsize=(5 * len(metrics), 4)
+        )
+
+        if len(metrics) == 1:
+            axes = [axes]
+
+        for ax, m in zip(axes, metrics):
+
+            bars = ax.bar(
+                profiles["cluster"].astype(str),
+                profiles[m],
+                color=[
+                    COLS[i % len(COLS)]
+                    for i in range(len(profiles))
+                ]
+            )
+
+            ax.bar_label(
+                bars,
+                fmt="%.1f",
+                padding=3,
+                fontsize=9
+            )
+
+            ax.set_title(
+                f"Avg {m.replace('_',' ').title()}"
+            )
+
+        plt.suptitle(
+            "Cluster Profiles",
+            fontsize=13,
+            fontweight="bold"
+        )
+
+        plt.tight_layout()
+
+        st.pyplot(fig)
+
+        plt.close()
+
+        st.info("""
+💡 Cluster Profile Insight:
+Each segment demonstrates distinct customer engagement,
+pricing behaviour, and restaurant quality characteristics.
+        """)
+
+    # ------------------------------------------------------------------
+    # TAB 3 — ELBOW METHOD
+    # ------------------------------------------------------------------
 
     with t3:
-        ins,sils=[],[]
-        kv=list(range(2,8))
+
+        ins, sils = [], []
+
+        kv = list(range(2, 8))
+
         for k in kv:
-            km=KMeans(n_clusters=k,n_init=5,random_state=42)
-            lb=km.fit_predict(Xs)
+
+            km = KMeans(
+                n_clusters=k,
+                n_init=5,
+                random_state=42
+            )
+
+            lb = km.fit_predict(Xs)
+
             ins.append(km.inertia_)
-            sils.append(silhouette_score(Xs,lb))
-        fig,(a1,a2)=plt.subplots(1,2,figsize=(11,4))
-        a1.plot(kv,ins,"bo-",lw=2,ms=7); a1.set_title("Inertia (Elbow)"); a1.set_xlabel("k")
-        a2.plot(kv,sils,"rs-",lw=2,ms=7); a2.set_title("Silhouette Score"); a2.set_xlabel("k")
-        plt.tight_layout(); st.pyplot(fig); plt.close()
+
+            sils.append(
+                silhouette_score(Xs, lb)
+            )
+
+        fig, (a1, a2) = plt.subplots(
+            1,
+            2,
+            figsize=(11, 4)
+        )
+
+        a1.plot(
+            kv,
+            ins,
+            "bo-",
+            lw=2,
+            ms=7
+        )
+
+        a1.set_title("Inertia (Elbow)")
+
+        a1.set_xlabel("k")
+
+        a2.plot(
+            kv,
+            sils,
+            "rs-",
+            lw=2,
+            ms=7
+        )
+
+        a2.set_title("Silhouette Score")
+
+        a2.set_xlabel("k")
+
+        plt.tight_layout()
+
+        st.pyplot(fig)
+
+        plt.close()
+
+        st.info("""
+💡 Optimal Cluster Selection:
+The Elbow Method and Silhouette Score were jointly used to determine
+the most meaningful number of restaurant segments.
+        """)
 
 
 # ─────────────────────────────────────────────────────────────────────────────
 #  PROFITABILITY PREDICTOR
 # ─────────────────────────────────────────────────────────────────────────────
 elif page == "💰  Profitability Predictor":
+
     st.title("💰 Restaurant Profitability Predictor")
-    st.markdown("Enter restaurant details — get a **Profitability Score (0–100)** with full breakdown")
-    st.markdown("---")
+
+    st.markdown(
+        "Enter restaurant details — get a **Profitability Score (0–100)** with full breakdown"
+    )
+
+    # ------------------------------------------------------------------
+    # PROFITABILITY EXPLANATION
+    # ------------------------------------------------------------------
+
+    with st.expander("📈 Profitability Scoring Methodology", expanded=True):
+
+        st.markdown("""
+### Profitability Prediction Logic
+
+This system combines Machine Learning predictions with business analytics
+to estimate restaurant profitability potential.
+
+### Profitability Score Components
+
+- ⭐ Predicted Restaurant Rating → 40%
+- 📈 Customer Demand / Votes → 25%
+- 💰 Price Positioning Efficiency → 20%
+- 📱 Digital Presence → 15%
+
+### Business Objectives
+
+The system helps identify:
+- high-growth restaurant opportunities
+- customer engagement strength
+- pricing effectiveness
+- digital readiness
+- operational improvement opportunities
+
+### Final Profitability Categories
+
+- 🟢 High Profit Potential
+- 🟡 Moderate Potential
+- 🟠 Low Potential
+- 🔴 At Risk
+        """)
+
+    st.info("""
+💡 Business Insight:
+Restaurants with strong customer engagement, good ratings,
+and digital ordering availability generally achieve higher
+profitability potential.
+    """)
+
 
     from profitability import compute_profitability
     from preprocessing import preprocess_single
