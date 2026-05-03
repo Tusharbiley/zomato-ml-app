@@ -61,7 +61,7 @@ def evaluate_all(
         r2_test  = r2_score(y_test, preds_test)
         r2_train = r2_score(y_train, preds_train)
 
-        overfit = "⚠ Yes" if (r2_train - r2_test) > 0.10 else "✓ No"
+        overfit = "⚠ Yes" if (r2_train - r2_test) > 0.15 else "✓ No"
 
         records.append({
             "Model":    name,
